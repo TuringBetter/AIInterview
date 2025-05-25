@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: CV2Offer
+  servlet:
+    multipart:
+      max-file-size: 10485760
+      max-request-size: 10485760
+      enabled: true
+
+# 服务器配置
+server:
+  port: 8080
+
+# Python API配置
+python:
+  api:
+    resume-endpoint: http://localhost:5000/api/resume/improve
+    interview-endpoint: http://localhost:5000/api/interview/simulate
+    timeout: 30000
+  scripts:
+    path: ./python
+  resume:
+    script: resume_optimizer.py
+  interview:
+    script: interview_simulator.py
+
+# 日志配置
+logging:
+  level:
+    com.c2o.cv2offer: INFO
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
