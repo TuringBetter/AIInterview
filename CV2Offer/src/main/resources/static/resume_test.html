@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>简历优化测试</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+<h2>简历优化接口测试</h2>
+<form action="http://localhost:8080/api/resume/optimize" method="post" enctype="multipart/form-data">
+    <div>
+        <label for="file">简历文件 (PDF格式):</label><br>
+        <input type="file" id="file" name="file" accept="application/pdf" required>
+    </div>
+    <div>
+        <label for="targetPosition">目标职位:</label><br>
+        <input type="text" id="targetPosition" name="targetPosition">
+    </div>
+    <div>
+        <label for="targetCompany">目标公司:</label><br>
+        <input type="text" id="targetCompany" name="targetCompany">
+    </div>
+    <div>
+        <label for="additionalInfo">额外信息或要求:</label><br>
+        <textarea id="additionalInfo" name="additionalInfo" rows="4" cols="50"></textarea>
+    </div>
+    <div>
+        <button type="submit">提交</button>
+    </div>
+</form>
+</body>
+</html>
