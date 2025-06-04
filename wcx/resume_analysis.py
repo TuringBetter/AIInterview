@@ -66,7 +66,7 @@ handle_workflow_iterator(
 # )
 
 # # ==== 🔧 配置信息 ====
-# API_TOKEN = "pat_kGAJgHFYDbW0SCN58Cn8xLBnTXBwCt657xSFrkrZMXb6V3x8I0AeV7z2d8UXEDkb"
+# API_TOKEN = "pat_DdnmJr9l18O74w9Y1i7LsxPx16Dua715FITUjZO6rrMGkhSfdFvhYHFXq1pNWeNo"
 # WORKFLOW_ID = "7511327674183319587"
 # pdf_path = "./个人简历.pdf"
 # prompt_text = "我想面试java"
