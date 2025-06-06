@@ -1,6 +1,7 @@
 import json
 import time
 from pathlib import Path
+from PyPDF2 import PdfReader
 from cozepy import (
     COZE_CN_BASE_URL,
     ChatStatus,
@@ -21,21 +22,23 @@ prompt_text = "我想面试java"
 # ==== 🚀 初始化 Coze 客户端 ====
 coze = Coze(auth=TokenAuth(token=API_TOKEN), base_url=COZE_CN_BASE_URL)
 
-# ==== 📤 上传 PDF 文件 ====
-print(f"📄 正在上传 PDF 文件: {pdf_path}")
-file = coze.files.upload(file=Path(pdf_path))
-pdf_file_id = file.id
-print(f"✅ 上传成功，文件 ID: {pdf_file_id}")
+# ==== 📤 读取 PDF 文件内容 ====
+print(f"📄 正在读取 PDF 文件: {pdf_path}")
+pdf_reader = PdfReader(pdf_path)
+pdf_text = ""
+for page in pdf_reader.pages:
+    pdf_text += page.extract_text()
+print(f"✅ PDF内容读取成功")
 
 # ==== ⚙️ 构造参数 ====
 parameters = {
     "gangwei": prompt_text,
-    "jianli": json.dumps({"file_id": pdf_file_id})
+    "jianli": json.dumps({"file": pdf_text})
 }
 
 # ==== 🎧 处理流式响应（增加等待提示） ====
 def handle_workflow_iterator(stream: Stream[WorkflowEvent]):
-    thinking_shown = False  # 是否已显示过“正在思考...”提示
+    thinking_shown = False  # 是否已显示过"正在思考..."提示
     for event in stream:
         if not thinking_shown:
             print("⏳ 模型正在思考，请稍候...\n")
