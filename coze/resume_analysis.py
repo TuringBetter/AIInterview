@@ -14,8 +14,8 @@ from cozepy import (
 
 # ==== 🔧 配置信息 ====
 API_TOKEN = "pat_DdnmJr9l18O74w9Y1i7LsxPx16Dua715FITUjZO6rrMGkhSfdFvhYHFXq1pNWeNo"
-WORKFLOW_ID = "7511275299829661737"
-pdf_path = r"./coze/profile.pdf"
+WORKFLOW_ID = "7511327674183319587"
+pdf_path = "./coze/profile.pdf"
 prompt_text = "我想面试java"
 
 # ==== 🚀 初始化 Coze 客户端 ====
@@ -30,12 +30,12 @@ print(f"✅ 上传成功，文件 ID: {pdf_file_id}")
 # ==== ⚙️ 构造参数 ====
 parameters = {
     "gangwei": prompt_text,
-    "jianli": {"file_id": pdf_file_id}
+    "jianli": json.dumps({"file_id": pdf_file_id})
 }
 
 # ==== 🎧 处理流式响应（增加等待提示） ====
 def handle_workflow_iterator(stream: Stream[WorkflowEvent]):
-    thinking_shown = False  # 是否已显示过"正在思考..."提示
+    thinking_shown = False  # 是否已显示过“正在思考...”提示
     for event in stream:
         if not thinking_shown:
             print("⏳ 模型正在思考，请稍候...\n")
