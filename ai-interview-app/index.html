@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 面试助手</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        #prompt-text {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        #drop-zone {
+            border: 2px dashed #1a73e8;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        #drop-zone.dragover {
+            background-color: #e8f0fe;
+            border-color: #0056b3;
+        }
+        #drop-zone p {
+            margin: 0;
+            font-size: 16px;
+            color: #555;
+        }
+        #file-name {
+            font-weight: bold;
+            color: #1a73e8;
+            margin-top: 10px;
+        }
+        #submit-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #submit-btn:disabled {
+            background-color: #a0c3ff;
+            cursor: not-allowed;
+        }
+        #result-container {
+            margin-top: 30px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 100px;
+            white-space: pre-wrap; /* 保持换行和空格 */
+            line-height: 1.6;
+            display: none; /* 默认隐藏 */
+        }
+        .thinking {
+            color: #555;
+            font-style: italic;
+        }
+        .error {
+            color: #d93025;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📄 AI 简历面试助手</h1>
+
+    <div class="form-group">
+        <label for="prompt-text">你想面试的岗位是什么？</label>
+        <input type="text" id="prompt-text" placeholder="例如：Java 后端开发工程师">
+    </div>
+
+    <div class="form-group">
+        <label for="pdf-file">上传你的简历 (PDF)</label>
+        <div id="drop-zone">
+            <p>将 PDF 文件拖拽到此处，或点击选择文件</p>
+            <p id="file-name"></p>
+        </div>
+        <input type="file" id="pdf-file" accept=".pdf" hidden>
+    </div>
+    
+    <button id="submit-btn" disabled>开始分析</button>
+
+    <div id="result-container">
+        <div id="result-content"></div>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('pdf-file');
+    const fileNameDisplay = document.getElementById('file-name');
+    const promptInput = document.getElementById('prompt-text');
+    const submitBtn = document.getElementById('submit-btn');
+    const resultContainer = document.getElementById('result-container');
+    const resultContent = document.getElementById('result-content');
+
+    let uploadedFile = null;
+
+    // 检查是否可以启用按钮
+    const checkForm = () => {
+        submitBtn.disabled = !(uploadedFile && promptInput.value.trim() !== "");
+    };
+
+    // --- 文件拖拽和选择逻辑 ---
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type === 'application/pdf') {
+            uploadedFile = files[0];
+            fileNameDisplay.textContent = `已选择文件: ${uploadedFile.name}`;
+            checkForm();
+        } else {
+            alert('请上传有效的 PDF 文件。');
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            uploadedFile = fileInput.files[0];
+            fileNameDisplay.textContent = `已选择文件: ${uploadedFile.name}`;
+            checkForm();
+        }
+    });
+
+    promptInput.addEventListener('input', checkForm);
+
+    // --- 表单提交和流式响应处理 ---
+    submitBtn.addEventListener('click', async () => {
+        if (submitBtn.disabled) return;
+
+        // 禁用按钮并清空旧结果
+        submitBtn.disabled = true;
+        submitBtn.textContent = '分析中...';
+        resultContainer.style.display = 'block';
+        resultContent.innerHTML = ''; // 清空之前的内容
+
+        // 创建 FormData
+        const formData = new FormData();
+        formData.append('pdf_file', uploadedFile);
+        formData.append('gangwei', promptInput.value);
+
+        try {
+            // 使用 fetch API 发送请求
+            const response = await fetch('http://127.0.0.1:18000/interview', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error(`服务器错误: ${response.status} ${response.statusText}`);
+            }
+
+            // 处理流式响应
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                // 解码收到的数据块 (可能包含多个事件)
+                const chunk = decoder.decode(value, { stream: true });
+                const events = chunk.split('\n\n').filter(e => e.startsWith('data:'));
+                
+                for (const eventString of events) {
+                    const jsonData = eventString.replace('data: ', '');
+                    try {
+                        const eventData = JSON.parse(jsonData);
+                        // 优雅地展示结果
+                        updateResult(eventData);
+                    } catch (e) {
+                        console.error('无法解析JSON:', jsonData);
+                    }
+                }
+            }
+        } catch (error) {
+            updateResult({ event: 'error', data: `请求失败: ${error.message}` });
+        } finally {
+            // 恢复按钮状态
+            submitBtn.disabled = false;
+            submitBtn.textContent = '开始分析';
+            checkForm(); // 根据当前状态决定按钮是否可用
+        }
+    });
+
+    function updateResult(event) {
+        if (event.event === 'thinking') {
+            const p = document.createElement('p');
+            p.className = 'thinking';
+            p.textContent = event.data;
+            resultContent.innerHTML = ''; // 清空并显示思考中
+            resultContent.appendChild(p);
+        } else if (event.event === 'message') {
+            // 如果之前只有 "思考中" 提示，则替换它
+            if (resultContent.querySelector('.thinking')) {
+                resultContent.innerHTML = '';
+            }
+            // 将返回的内容追加到结果区域
+            resultContent.innerHTML += event.data;
+        } else if (event.event === 'error') {
+            const p = document.createElement('p');
+            p.className = 'error';
+            p.textContent = `❌ 错误: ${event.data}`;
+            resultContent.appendChild(p);
+        } else if (event.event === 'done') {
+            // 可以选择添加一个完成标记
+            console.log('Stream finished.');
+        }
+    }
+
+</script>
+
+</body>
+</html>
